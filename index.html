@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>CAOS APP</title>
+    <style>
+        /* CSS que você já tem... */
+        body { 
+            touch-action: manipulation; /* Evita zoom no clique duplo */
+            user-select: none; /* Evita selecionar texto sem querer no jogo */
+            -webkit-tap-highlight-color: transparent; /* Tira o brilho azul de clique */
+        }
+    </style>
+</head>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAOS - EDIÇÃO DEFINITIVA</title>
+    <style>
+        :root { --cor: #ff0033; --bg: #050505; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        
+        #card { 
+            width: 88%; max-width: 420px; min-height: 450px; background: #0a0a0a; 
+            border: 2px solid var(--cor); border-radius: 35px; padding: 40px; 
+            text-align: center; display: flex; flex-direction: column; justify-content: center; 
+            box-shadow: 0 0 40px rgba(255, 0, 51, 0.1); box-sizing: border-box;
+            transition: 0.3s ease;
+        }
+
+        #texto { font-size: 24px; font-weight: 800; line-height: 1.2; text-transform: uppercase; color: #fff; }
+        
+        #consequencia { 
+            font-size: 15px; color: #ff9900; margin-top: 30px; 
+            font-style: italic; border-top: 1px solid #222; padding-top: 25px; 
+            font-weight: 500; line-height: 1.4;
+        }
+
+        #timer-box { width: 100%; height: 6px; background: #222; border-radius: 10px; margin-top: 25px; display: none; overflow: hidden; }
+        #timer-fill { width: 100%; height: 100%; background: #00f2ff; box-shadow: 0 0 10px #00f2ff; }
+
+        button { 
+            margin-top: 30px; width: 88%; max-width: 420px; padding: 22px; 
+            border-radius: 20px; border: none; background: white; color: black; 
+            font-size: 18px; font-weight: 900; cursor: pointer; transition: 0.2s;
+        }
+        button:active { transform: scale(0.95); opacity: 0.9; }
+        #stats { margin-top: 15px; font-size: 10px; opacity: 0.3; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <div id="card">
+        <div id="texto">TOQUE PARA LIBERAR O CAOS</div>
+        <div id="consequencia">Quem amarela, paga o preço.</div>
+        <div id="timer-box"><div id="timer-fill"></div></div>
+    </div>
+    <div id="stats">CARTAS RESTANTES: <span id="num">100</span></div>
+    <button onclick="proxima()">PRÓXIMA CARTA 💀</button>
+
+    <script>
+        let deck = [
+            // DESAFIOS DE IMPACTO
+            {m:"Mostre seu Direct do Instagram ou WhatsApp para a pessoa à esquerda.", c:"Beba 4 doses e jogue sem camisa até o fim."},
+            {m:"Mande um 'Oi sumida(o)' para a 5ª pessoa da sua lista do WhatsApp.", c:"Beba 3 doses e deixe alguém postar um Story no seu perfil."},
+            {m:"Ligue para o seu último EX no viva-voz e diga apenas 'Oi, lembrei de você'.", c:"Beba 5 doses agora."},
+            {m:"Deixe alguém da roda escrever 'PROPRIEDADE DO CAOS' no seu braço com caneta.", c:"Beba 3 doses e tire os sapatos."},
+            {m:"Dê seu celular desbloqueado na mão da pessoa à direita por 2 minutos.", c:"Se pegar de volta, vira o copo de uma vez."},
+            
+            // REGRAS DE AMBIENTE (MUDAM O JOGO)
+            {m:"REGRA: Ninguém na roda pode usar as mãos para beber pelas próximas 2 rodadas.", c:"Quem usar as mãos, bebe 1 dose extra por toque."},
+            {m:"REGRA: Proibido falar nomes de pessoas da roda pelas próximas 3 rodadas.", c:"Falou o nome? Bebe 1 dose na hora."},
+            {m:"REGRA: Sempre que alguém rir, quem tirou esta carta deve beber uma dose pequena.", c:"Dura por 5 minutos."},
+            
+            // DUELOS
+            {m:"DUELO: Escolha alguém. Quem piscar primeiro no encarar bebe 2 doses.", c:"O perdedor também deve ficar de joelhos por 1 rodada."},
+            {m:"DUELO: Desafie alguém para uma queda de braço (ou pedra, papel e tesoura).", c:"O perdedor vira 3 doses."},
+            
+            // EXPOSIÇÃO E MICOS
+            {m:"Mostre seu saldo bancário atual na tela para todos.", c:"Vira 3 doses sem respirar."},
+            {m:"Diga quem da roda você pegaria agora se estivesse solteiro(a).", c:"Se não falar, a roda inventa um mico físico para você."},
+            {m:"Revele a última mentira pesada que você contou para alguém aqui.", c:"Beba 4 doses e deixe alguém ver seu histórico do YouTube."},
+            {m:"Lamba o pescoço da pessoa à sua esquerda ou dê um beijo no rosto.", c:"Vira 3 doses de bebidas misturadas."},
+            {m:"Mande um áudio gemendo no grupo da família e apague após 30 segundos.", c:"Beba 5 doses e pague a próxima rodada de gelo/bebida."},
+            {m:"Abra seu Google e mostre as últimas 5 buscas para a roda.", c:"Beba 3 doses e faça 20 flexões."},
+            {m:"Diga quanto você ganha por mês ou mostre seu último extrato.", c:"Vira 4 doses de uma vez."},
+            {m:"Tire a camisa (homens) ou jogue de sutiã/beba 4 doses (mulheres).", c:"Quem tirar, não pode vestir até o final do jogo."},
+            {m:"Diga quem é a pessoa mais chata da roda e por quê.", c:"Beba 2 doses e peça desculpas de joelhos."},
+            {m:"Mande foto do seu pé para um contato aleatório no WhatsApp.", c:"Beba 4 doses e faça uma selfie zoada."},
+            
+            // VELOCIDADE (FLASH)
+            {m:"Fale 5 nomes de motéis em 5 segundos!", s:5, c:"Errou? Bebe 2 doses e fica em silêncio por 2 rodadas."},
+            {m:"Diga 3 ex-namorados(as) de pessoas da roda em 5 segundos!", s:5, c:"Falhou? Bebe 3 doses."},
+            {m:"Diga 5 marcas de bebida alcoólica em 5 segundos!", s:5, c:"Errou? Bebe 2 e serve a todos."},
+            
+            // MAIS CONSEQUÊNCIAS E INTERAÇÕES
+            {m:"Beba se você já stalkeou alguém que está nesta sala hoje.", c:"Se não confessar e te pegarem, vira 3 doses."},
+            {m:"Troque de camisa com a pessoa à sua frente agora.", c:"Bebam 2 doses cada se não fizerem em 30 segundos."},
+            {m:"Fique embaixo da mesa até a sua próxima vez de jogar.", c:"Beba 2 doses e não pode sentar na cadeira por 2 rodadas."},
+            {m:"Deixe alguém da roda ler sua última conversa com o(a) 'contatinho'.", c:"Beba 4 doses e perca o direito de falar por 1 rodada."},
+            {m:"Mostre sua galeria de fotos apagadas recentemente.", c:"Beba 5 doses agora."},
+            {m:"Revele se você já traiu ou foi traído(a).", c:"Se mentir, vira o copo de todo mundo."},
+            {m:"Diga qual o segredo mais sujo que você sabe de alguém na roda.", c:"Se não contar, bebe 3 doses e fica de costas por 1 rodada."},
+            {m:"Lamba o rosto da pessoa à sua frente.", c:"Beba 3 doses e faça 15 abdominais."},
+            {m:"Mande 'Te amo' para o seu 3º contato do WhatsApp agora.", c:"Se não mandar, vira 3 doses."},
+            {m:"Tire o sapato e beba uma dose dentro dele.", c:"Beba 4 doses normais."},
+            {m:"Diga quem da roda beija melhor (se souber).", c:"Beba 2 doses e escolha alguém para beber com você."},
+            {m:"Deixe alguém do grupo escolher sua próxima foto de perfil por 10 min.", c:"Beba 4 doses."},
+            {m:"Fique de joelhos e peça 'perdão' para a roda de forma dramática.", c:"Beba 3 doses."},
+            {m:"Deixe a roda misturar 3 ingredientes comestíveis e você deve comer.", c:"Beba 5 doses de punição."},
+            {m:"Fique em pé em uma perna só até sua próxima vez.", c:"Se cair, bebe 2 doses."},
+            {m:"Diga qual hábito seu mais incomoda as pessoas.", c:"Beba 2 doses."},
+            {m:"Mande um print do seu saldo bancário no grupo dos amigos.", c:"Vira 3 doses."},
+            {m:"Fique de mãos dadas com a pessoa à direita por 3 rodadas.", c:"Quem soltar bebe 2 doses."},
+            {m:"Imite um animal no cio por 30 segundos.", c:"Beba 4 doses se a imitação for ruim."},
+            {m:"Beba 1 dose para cada ex que você ainda tem no Instagram.", c:"Se tiver mais de 5, vira o copo."},
+            {m:"Mande 'Oi' para o seu último match no Tinder ou Bumble.", c:"Beba 3 doses."},
+            {m:"Diga qual foi a maior mentira que você já contou hoje.", c:"Beba 2 doses."},
+            {m:"Deixe alguém ver seus itens salvos no Instagram.", c:"Beba 3 doses."},
+            {m:"Fale 3 defeitos da pessoa que está à sua frente.", c:"Beba 2 doses e dê um abraço nela."},
+            {m:"Tente lamber seu próprio cotovelo.", c:"Se não conseguir, bebe 2 doses."},
+            {m:"Mande 'Quero você' para um contato e apague logo em seguida.", c:"Beba 5 doses."},
+            {m:"Fale 4 palavrões em 3 segundos!", s:3, c:"Bebe 2 e leva um tapa leve de cada um."},
+            {m:"Diga quem da roda parece ser o mais 'perigoso' na cama.", c:"Beba 2 doses."},
+            {m:"Deixe alguém fazer um penteado ridículo em você e fique assim.", c:"Beba 3 doses."},
+            {m:"Diga qual a maior loucura que você já fez por dinheiro.", c:"Beba 2 doses."},
+            {m:"Fique em silêncio total por 2 rodadas. Se falar, bebe 3.", c:""},
+            {m:"Conte qual foi a pior transa da sua vida.", c:"Beba 3 doses."},
+            {m:"Diga qual o nome da pessoa mais bonita da sala.", c:"Beba 2 doses."},
+            {m:"Mande um áudio cantando funk para o seu chefe ou mãe.", c:"Beba 6 doses."},
+            {m:"Deixe alguém mudar seu nome no WhatsApp por 1 hora.", c:"Beba 3 doses."},
+            {m:"Diga quem você nunca apresentaria aos seus pais.", c:"Beba 2 doses."},
+            {m:"Diga quem da roda tem o melhor corpo.", c:"Beba 2 doses."},
+            {m:"Fale 5 marcas de carro em 5 segundos!", s:5, c:"Errou? Bebe 2."},
+            {m:"Beba se você já usou o celular de outra pessoa escondido.", c:"Se não confessar, bebe 3."},
+            {m:"Diga qual o sonho mais estranho que já teve com alguém aqui.", c:"Beba 2 doses."},
+            {m:"Mande uma mensagem para o seu ex dizendo 'Ainda te amo'.", c:"Beba 10 doses ou vira a garrafa."},
+            {m:"Fique com gelo na boca até ele derreter totalmente.", c:"Cuspiu? Bebe 2 doses."},
+            {m:"Diga 3 nomes de vilões de filmes em 5 segundos!", s:5, c:"Errou? Bebe 2."},
+            {m:"Ligue para uma pizzaria e tente pedir algo que não seja pizza.", c:"Beba 4 doses."},
+            {m:"Diga qual foi a última pessoa que você stalkeou.", c:"Beba 2 doses."},
+            {m:"Beba 2 doses se você já foi traído(a).", c:""},
+            {m:"Fale o alfabeto de trás para frente em 10 segundos.", s:10, c:"Errou? Bebe 2."},
+            {m:"Diga quem da roda você levaria para um motel agora.", c:"Beba 4 doses."},
+            {m:"Mostre sua última pesquisa no Google.", c:"Beba 3 doses."},
+            {m:"Fique de joelhos por 2 rodadas.", c:"Levantou? Bebe 3 doses."},
+            {m:"Diga qual segredo seu te faria ser cancelado.", c:"Beba 5 doses."},
+            {m:"Dê um tapa na cara de alguém ou beba 3 doses.", c:""},
+            {m:"Diga quem é o mais fura-olho da roda.", c:"Beba 2 doses."},
+            {m:"Tire a meia e beba uma dose direto do pé de alguém.", c:"Beba 6 doses normais."},
+            {m:"Beba 1 dose para cada pessoa que você já beijou da roda.", c:""},
+            {m:"Diga quem na roda se veste pior.", c:"Beba 2 doses."},
+            {m:"Mande um emoji de 🍑 para o 2º contato do seu WhatsApp.", c:"Beba 4 doses."},
+            {m:"Fique sem usar as mãos para beber até o fim do jogo.", c:"Usou? Bebe 2 extras."},
+            {m:"Mostre suas fotos ocultas no celular.", c:"Beba 5 doses."},
+            {m:"Diga quanto você tem na carteira agora.", c:"Beba 1 dose."},
+            {m:"Escolha alguém para beber uma dose com você sem as mãos.", c:""},
+            {m:"Diga qual a maior vergonha que passou bêbado.", c:"Beba 2 doses."},
+            {m:"Beba se você já quis o ex de um amigo.", c:""},
+            {m:"Deixe alguém da roda morder seu ombro.", c:"Beba 3 doses."},
+            {m:"Diga quem na roda tem mais chance de ser preso.", c:"Beba 2 doses."},
+            {m:"Fale 3 gírias de rua em 3 segundos!", s:3, c:"Errou? Bebe 1."},
+            {m:"Diga quem é a pessoa mais falsa da roda.", c:"Beba 4 doses."},
+            {m:"Mande 'Oi' para um contato aleatório.", c:"Beba 2 doses."},
+            {m:"Diga qual a coisa mais ilegal que você já fez.", c:"Beba 5 doses."},
+            {m:"Deixe a roda escolher sua próxima música no Spotify.", c:"Beba 1 dose."},
+            {m:"Fale o nome do seu ex mais recente.", c:"Beba 2 doses."},
+            {m:"Diga quem na roda você nunca apresentaria para os pais.", c:"Beba 2 doses."},
+            {m:"Beba 3 doses se você já mentiu hoje.", c:""},
+            {m:"Fique sem usar o celular até o fim da partida.", c:"Usou? Bebe 5 doses."},
+            {m:"Diga quem da roda tem o melhor 'shape'.", c:"Beba 1 dose."},
+            {m:"Vira o copo se você já mandou nudes.", c:""},
+            {m:"Diga quem é a pessoa mais pão-dura.", c:"Beba 2 doses."},
+            {m:"Faça um bico de 1 minuto em silêncio.", c:"Beba 2 doses."},
+            {m:"Tire uma peça de roupa.", c:"Beba 4 doses."}
+        ];
+
+        // Sorteio inicial
+        deck = deck.sort(() => Math.random() - 0.5).slice(0, 100);
+
+        function proxima() {
+            if (deck.length === 0) {
+                document.getElementById('texto').innerText = "O CAOS CHEGOU AO FIM.";
+                document.getElementById('consequencia').innerText = "Todos vivos?";
+                document.getElementById('num').innerText = "0";
+                return;
+            }
+
+            const index = Math.floor(Math.random() * deck.length);
+            const carta = deck.splice(index, 1)[0];
+
+            const cardUI = document.getElementById('card');
+            const textoUI = document.getElementById('texto');
+            const consUI = document.getElementById('consequencia');
+            const numUI = document.getElementById('num');
+            const tBox = document.getElementById('timer-box');
+            const tFill = document.getElementById('timer-fill');
+
+            textoUI.innerText = carta.m;
+            consUI.innerText = "OU ENTÃO: " + (carta.c || "Beba 2 doses e siga o jogo.");
+            numUI.innerText = deck.length;
+
+            // Feedback visual: Se for REGRA ou DUELO, a borda brilha azul
+            if(carta.m.includes("REGRA") || carta.m.includes("DUELO")) {
+                cardUI.style.borderColor = "#00f2ff";
+                cardUI.style.boxShadow = "0 0 40px rgba(0, 242, 255, 0.2)";
+            } else {
+                cardUI.style.borderColor = "#ff0033";
+                cardUI.style.boxShadow = "0 0 40px rgba(255, 0, 51, 0.1)";
+            }
+
+            if (carta.s) {
+                tBox.style.display = 'block';
+                tFill.style.transition = 'none';
+                tFill.style.width = '100%';
+                setTimeout(() => {
+                    tFill.style.transition = `width ${carta.s}s linear`;
+                    tFill.style.width = '0%';
+                }, 100);
+            } else {
+                tBox.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
